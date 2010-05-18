@@ -22,12 +22,11 @@ Partial Class Form1
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
-        Me.components = New System.ComponentModel.Container()
         Me.txtLoadFile = New System.Windows.Forms.TextBox()
         Me.btnLoad = New System.Windows.Forms.Button()
         Me.PictureBox1 = New System.Windows.Forms.PictureBox()
         Me.btnPlay = New System.Windows.Forms.Button()
-        Me.PlayTimer = New System.Windows.Forms.Timer(Me.components)
+        Me.PlayTimer = New System.Windows.Forms.Timer()
         Me.btnPause = New System.Windows.Forms.Button()
         Me.fp10sTrackBar = New System.Windows.Forms.TrackBar()
         Me.lblFrame = New System.Windows.Forms.Label()
@@ -37,9 +36,7 @@ Partial Class Form1
         Me.btnRepairFrame = New System.Windows.Forms.Button()
         Me.txtSaveFile = New System.Windows.Forms.TextBox()
         Me.btnSave = New System.Windows.Forms.Button()
-        CType(Me.PictureBox1, System.ComponentModel.ISupportInitialize).BeginInit()
-        CType(Me.fp10sTrackBar, System.ComponentModel.ISupportInitialize).BeginInit()
-        CType(Me.CurrentFrameTrackBar, System.ComponentModel.ISupportInitialize).BeginInit()
+        Me.lstThpFiles = New System.Windows.Forms.ListBox()
         Me.SuspendLayout()
         '
         'txtLoadFile
@@ -48,12 +45,13 @@ Partial Class Form1
                     Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.txtLoadFile.Location = New System.Drawing.Point(12, 12)
         Me.txtLoadFile.Name = "txtLoadFile"
-        Me.txtLoadFile.Size = New System.Drawing.Size(728, 20)
+        Me.txtLoadFile.Size = New System.Drawing.Size(706, 20)
         Me.txtLoadFile.TabIndex = 0
         '
         'btnLoad
         '
-        Me.btnLoad.Location = New System.Drawing.Point(746, 12)
+        Me.btnLoad.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.btnLoad.Location = New System.Drawing.Point(724, 12)
         Me.btnLoad.Name = "btnLoad"
         Me.btnLoad.Size = New System.Drawing.Size(52, 23)
         Me.btnLoad.TabIndex = 2
@@ -65,16 +63,16 @@ Partial Class Form1
         Me.PictureBox1.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
                     Or System.Windows.Forms.AnchorStyles.Left) _
                     Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.PictureBox1.Location = New System.Drawing.Point(12, 109)
+        Me.PictureBox1.Location = New System.Drawing.Point(12, 228)
         Me.PictureBox1.Name = "PictureBox1"
-        Me.PictureBox1.Size = New System.Drawing.Size(786, 484)
+        Me.PictureBox1.Size = New System.Drawing.Size(764, 223)
         Me.PictureBox1.TabIndex = 4
         Me.PictureBox1.TabStop = False
         '
         'btnPlay
         '
         Me.btnPlay.Enabled = False
-        Me.btnPlay.Location = New System.Drawing.Point(12, 51)
+        Me.btnPlay.Location = New System.Drawing.Point(12, 170)
         Me.btnPlay.Name = "btnPlay"
         Me.btnPlay.Size = New System.Drawing.Size(75, 23)
         Me.btnPlay.TabIndex = 5
@@ -87,7 +85,7 @@ Partial Class Form1
         'btnPause
         '
         Me.btnPause.Enabled = False
-        Me.btnPause.Location = New System.Drawing.Point(93, 51)
+        Me.btnPause.Location = New System.Drawing.Point(93, 170)
         Me.btnPause.Name = "btnPause"
         Me.btnPause.Size = New System.Drawing.Size(75, 23)
         Me.btnPause.TabIndex = 6
@@ -100,18 +98,18 @@ Partial Class Form1
                     Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.fp10sTrackBar.AutoSize = False
         Me.fp10sTrackBar.Enabled = False
-        Me.fp10sTrackBar.Location = New System.Drawing.Point(174, 51)
+        Me.fp10sTrackBar.Location = New System.Drawing.Point(174, 170)
         Me.fp10sTrackBar.Maximum = 1000
         Me.fp10sTrackBar.Minimum = -1000
         Me.fp10sTrackBar.Name = "fp10sTrackBar"
-        Me.fp10sTrackBar.Size = New System.Drawing.Size(535, 23)
+        Me.fp10sTrackBar.Size = New System.Drawing.Size(513, 23)
         Me.fp10sTrackBar.TabIndex = 7
         Me.fp10sTrackBar.TickStyle = System.Windows.Forms.TickStyle.None
         '
         'lblFrame
         '
         Me.lblFrame.AutoSize = True
-        Me.lblFrame.Location = New System.Drawing.Point(12, 35)
+        Me.lblFrame.Location = New System.Drawing.Point(12, 154)
         Me.lblFrame.Name = "lblFrame"
         Me.lblFrame.Size = New System.Drawing.Size(39, 13)
         Me.lblFrame.TabIndex = 8
@@ -123,17 +121,17 @@ Partial Class Form1
                     Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.CurrentFrameTrackBar.AutoSize = False
         Me.CurrentFrameTrackBar.Enabled = False
-        Me.CurrentFrameTrackBar.Location = New System.Drawing.Point(94, 80)
+        Me.CurrentFrameTrackBar.Location = New System.Drawing.Point(94, 199)
         Me.CurrentFrameTrackBar.Maximum = 1000
         Me.CurrentFrameTrackBar.Minimum = -1000
         Me.CurrentFrameTrackBar.Name = "CurrentFrameTrackBar"
-        Me.CurrentFrameTrackBar.Size = New System.Drawing.Size(704, 23)
+        Me.CurrentFrameTrackBar.Size = New System.Drawing.Size(593, 23)
         Me.CurrentFrameTrackBar.TabIndex = 9
         Me.CurrentFrameTrackBar.TickStyle = System.Windows.Forms.TickStyle.None
         '
         'btnPrev
         '
-        Me.btnPrev.Location = New System.Drawing.Point(12, 80)
+        Me.btnPrev.Location = New System.Drawing.Point(12, 199)
         Me.btnPrev.Name = "btnPrev"
         Me.btnPrev.Size = New System.Drawing.Size(35, 23)
         Me.btnPrev.TabIndex = 10
@@ -142,7 +140,7 @@ Partial Class Form1
         '
         'btnNext
         '
-        Me.btnNext.Location = New System.Drawing.Point(53, 80)
+        Me.btnNext.Location = New System.Drawing.Point(53, 199)
         Me.btnNext.Name = "btnNext"
         Me.btnNext.Size = New System.Drawing.Size(35, 23)
         Me.btnNext.TabIndex = 11
@@ -153,9 +151,9 @@ Partial Class Form1
         '
         Me.btnRepairFrame.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.btnRepairFrame.Enabled = False
-        Me.btnRepairFrame.Location = New System.Drawing.Point(715, 51)
+        Me.btnRepairFrame.Location = New System.Drawing.Point(693, 170)
         Me.btnRepairFrame.Name = "btnRepairFrame"
-        Me.btnRepairFrame.Size = New System.Drawing.Size(83, 23)
+        Me.btnRepairFrame.Size = New System.Drawing.Size(83, 52)
         Me.btnRepairFrame.TabIndex = 12
         Me.btnRepairFrame.Text = "Repair Frame"
         Me.btnRepairFrame.UseVisualStyleBackColor = True
@@ -164,25 +162,36 @@ Partial Class Form1
         '
         Me.txtSaveFile.Anchor = CType(((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left) _
                     Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.txtSaveFile.Location = New System.Drawing.Point(12, 599)
+        Me.txtSaveFile.Location = New System.Drawing.Point(12, 457)
         Me.txtSaveFile.Name = "txtSaveFile"
-        Me.txtSaveFile.Size = New System.Drawing.Size(728, 20)
+        Me.txtSaveFile.Size = New System.Drawing.Size(706, 20)
         Me.txtSaveFile.TabIndex = 13
         '
         'btnSave
         '
-        Me.btnSave.Location = New System.Drawing.Point(746, 599)
+        Me.btnSave.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.btnSave.Location = New System.Drawing.Point(724, 457)
         Me.btnSave.Name = "btnSave"
         Me.btnSave.Size = New System.Drawing.Size(52, 23)
         Me.btnSave.TabIndex = 14
         Me.btnSave.Text = "Save"
         Me.btnSave.UseVisualStyleBackColor = True
         '
+        'lstThpFiles
+        '
+        Me.lstThpFiles.FormattingEnabled = True
+        Me.lstThpFiles.IntegralHeight = False
+        Me.lstThpFiles.Location = New System.Drawing.Point(12, 40)
+        Me.lstThpFiles.Name = "lstThpFiles"
+        Me.lstThpFiles.Size = New System.Drawing.Size(764, 111)
+        Me.lstThpFiles.TabIndex = 15
+        '
         'Form1
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(810, 631)
+        Me.ClientSize = New System.Drawing.Size(788, 489)
+        Me.Controls.Add(Me.lstThpFiles)
         Me.Controls.Add(Me.btnSave)
         Me.Controls.Add(Me.txtSaveFile)
         Me.Controls.Add(Me.btnRepairFrame)
@@ -198,9 +207,6 @@ Partial Class Form1
         Me.Controls.Add(Me.txtLoadFile)
         Me.Name = "Form1"
         Me.Text = "Form1"
-        CType(Me.PictureBox1, System.ComponentModel.ISupportInitialize).EndInit()
-        CType(Me.fp10sTrackBar, System.ComponentModel.ISupportInitialize).EndInit()
-        CType(Me.CurrentFrameTrackBar, System.ComponentModel.ISupportInitialize).EndInit()
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
@@ -219,5 +225,6 @@ Partial Class Form1
     Friend WithEvents btnRepairFrame As System.Windows.Forms.Button
     Friend WithEvents txtSaveFile As System.Windows.Forms.TextBox
     Friend WithEvents btnSave As System.Windows.Forms.Button
+    Friend WithEvents lstThpFiles As System.Windows.Forms.ListBox
 
 End Class

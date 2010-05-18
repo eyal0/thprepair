@@ -1,12 +1,20 @@
 ﻿Public Class Form1
+    Private gcm_image As System.IO.MemoryStream
     Private t As Thp
 
     Private Sub btnLoad_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles btnLoad.Click
         Dim fo As New OpenFileDialog
-        fo.Filter = "THP Movies|*.thp|All Files|*.*"
+        fo.Filter = "GameCube Images (*.gcm,*.iso)|*.gcm;*.iso|All Files|*.*"
         If fo.ShowDialog() = Windows.Forms.DialogResult.OK Then
             txtLoadFile.Text = fo.FileName
-            Dim br As New System.IO.BinaryReader(New System.IO.FileStream(txtLoadFile.Text, IO.FileMode.Open, IO.FileAccess.Read))
+            Dim br As New System.IO.BinaryReader(New System.IO.FileStream(txtLoadFile.Text, IO.FileMode.Open, IO.FileAccess.Read), System.Text.Encoding.UTF8)
+            For Each g As GcmFile In GetGcmFiles(br)
+                If g.filename.EndsWith(".thp") Then
+                    lstThpFiles.Items.Add(g)
+                End If
+            Next
+
+
             t = Thp.Read(br)
             CurrentFrameTrackBar.Minimum = 0
             CurrentFrameTrackBar.Maximum = CInt(t.MyThpHeader.numFrames - 1)
@@ -79,12 +87,16 @@
 
     Private Sub btnSave_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles btnSave.Click
         Dim fs As New SaveFileDialog
-        fs.Filter = "THP Movies|*.thp|All Files|*.*"
+        fs.Filter = "GameCube Images (*.gcm,*.iso)|*.gcm;*.iso|All Files|*.*"
         If fs.ShowDialog() = Windows.Forms.DialogResult.OK Then
             txtSaveFile.Text = fs.FileName
             Dim bw As New System.IO.BinaryWriter(New System.IO.FileStream(txtSaveFile.Text, IO.FileMode.Create, IO.FileAccess.Write))
             t.Write(bw)
             bw.Close()
         End If
+    End Sub
+
+    Private Sub txtLoadFile_TextChanged(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles txtLoadFile.TextChanged
+
     End Sub
 End Class
