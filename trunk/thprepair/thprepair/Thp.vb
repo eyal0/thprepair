@@ -33,6 +33,21 @@
             Read.lastFrameOffset = f.ReadUInt32BE
         End Function
 
+        Public Sub Write(ByVal bw As IO.BinaryWriter)
+            bw.Write(tag)
+            bw.WriteBE(version)
+            bw.WriteBE(maxBufferSize)
+            bw.WriteBE(maxAudioSamples)
+            bw.WriteBE(fps)
+            bw.WriteBE(numFrames)
+            bw.WriteBE(firstFrameSize)
+            bw.WriteBE(dataSize)
+            bw.WriteBE(componentDataOffset)
+            bw.WriteBE(offsetsDataOffset)
+            bw.WriteBE(firstFrameOffset)
+            bw.WriteBE(lastFrameOffset)
+        End Sub
+
         Sub Repair()
         End Sub
     End Class
@@ -53,12 +68,20 @@
             Next
         End Function
 
+        Public Sub Write(ByVal bw As IO.BinaryWriter)
+            bw.WriteBE(numComponents)
+            For i As Integer = 0 To 15 'always 16 numbers, even if numComponents is less than 16
+                bw.Write(componentTypes(i))
+            Next
+        End Sub
+
         Sub Repair()
         End Sub
     End Class
 
     MustInherit Class ThpComponent
         MustOverride Sub Repair()
+        MustOverride Sub Write(ByVal bw As System.IO.BinaryWriter, ByVal version As UInt32)
     End Class
 
     Class ThpVideoInfo
@@ -75,6 +98,14 @@
                 Read.unknown = f.ReadUInt32BE
             End If
         End Function
+
+        Public Overrides Sub Write(ByVal bw As IO.BinaryWriter, ByVal version As UInt32)
+            bw.WriteBE(width)
+            bw.WriteBE(height)
+            If version = ThpHeader.VERSION_1_1 Then
+                bw.WriteBE(unknown)
+            End If
+        End Sub
 
         Public Overrides Sub Repair()
         End Sub
@@ -97,6 +128,15 @@
             End If
         End Function
 
+        Public Overrides Sub Write(ByVal bw As IO.BinaryWriter, ByVal version As UInt32)
+            bw.WriteBE(numChannels)
+            bw.WriteBE(frequency)
+            bw.WriteBE(numSamples)
+            If version = ThpHeader.VERSION_1_1 Then
+                bw.WriteBE(numData)
+            End If
+        End Sub
+
         Public Overrides Sub Repair()
         End Sub
     End Class
@@ -118,21 +158,34 @@
                 End If
             End Function
 
+            Sub write(ByVal bw As System.IO.BinaryWriter, ByVal containsAudio As Boolean)
+                bw.WriteBE(nextTotalSize)
+                bw.WriteBE(prevTotalSize)
+                bw.WriteBE(imageSize)
+                If containsAudio Then
+                    bw.WriteBE(audioSize)
+                End If
+            End Sub
+
             Sub Repair()
             End Sub
         End Class
 
         Class ThpVideoFrame
             Public data() As Byte
-            Public fixed_data() As Byte
-            Public image As Image
 
             Shared Function Read(ByVal f As System.IO.BinaryReader, ByVal imageSize As UInt32) As ThpVideoFrame
                 Read = New ThpVideoFrame
                 Read.data = f.ReadBytes(CInt(imageSize))
             End Function
 
-            Sub Repair()
+            Sub Write(ByVal bw As System.IO.BinaryWriter)
+                bw.Write(data)
+            End Sub
+
+            Function ToImage() As Image
+                Dim fixed_data() As Byte
+                Dim image As Image
                 Dim current_byte As Integer = 0
                 Dim temp_fixed_data As New List(Of Byte) 'with ff converted to ff 00 as needed
                 Dim end_byte As Integer = data.Length - 2
@@ -165,6 +218,15 @@
                 Catch ex As Exception
                     Throw New ImageException("Can't make image", ex)
                 End Try
+                ms.Close()
+                ms.Dispose()
+                Return image
+            End Function
+
+            Sub Repair()
+                Dim test_image As Image = ToImage()
+                test_image.Dispose()
+                test_image = Nothing
             End Sub
 
             Class ImageException
@@ -183,6 +245,10 @@
                 Read.data = f.ReadBytes(CInt(audioSize)) 'no parsing for now
             End Function
 
+            Sub Write(ByVal bw As System.IO.BinaryWriter)
+                bw.Write(data)
+            End Sub
+
             Sub Repair()
             End Sub
         End Class
@@ -200,6 +266,13 @@
                 Read.MyPadding = f.ReadBytes(CInt(frameSize - (Read.MyThpFrameHeader.imageSize + audioNumData * Read.MyThpFrameHeader.audioSize + 16)))
             End If
         End Function
+
+        Sub Write(ByVal bw As System.IO.BinaryWriter, ByVal audioNumData As Integer, ByVal frameSize As UInt32)
+            MyThpFrameHeader.write(bw, audioNumData > 0)
+            MyThpVideoFrame.Write(bw)
+            MyThpAudioFrame.Write(bw)
+            If MyPadding IsNot Nothing Then bw.Write(MyPadding)
+        End Sub
 
         Sub Repair()
             MyThpFrameHeader.Repair()
@@ -243,6 +316,27 @@
         Next
     End Function
 
+    Public Sub Write(ByVal bw As IO.BinaryWriter)
+        MyThpHeader.Write(bw)
+        MyThpComponentsHeader.Write(bw)
+        For i As Integer = 0 To CInt(MyThpComponentsHeader.numComponents - 1)
+            MyThpComponents(i).Write(bw, MyThpHeader.version)
+        Next
+        For i As Integer = 0 To CInt(MyThpHeader.numFrames - 1)
+            Dim currentFrameSize As UInt32
+            If i = 0 Then
+                currentFrameSize = MyThpHeader.firstFrameSize
+            Else
+                currentFrameSize = MyThpFrames(i - 1).MyThpFrameHeader.nextTotalSize
+            End If
+            If MyThpComponentsHeader.componentTypes.Length < 2 Then
+                MyThpFrames(i).Write(bw, 0, currentFrameSize)
+            Else
+                MyThpFrames(i).Write(bw, CInt(CType(MyThpComponents(1), ThpAudioInfo).numData), currentFrameSize)
+            End If
+        Next
+    End Sub
+
     Sub Repair()
         MyThpHeader.Repair()
         MyThpComponentsHeader.Repair()
@@ -254,14 +348,18 @@
                 MyThpFrames(i).Repair()
             Catch ex As ThpFrame.ThpVideoFrame.ImageException
                 'find a frame nearby that is smaller
-                Dim current_frame As Integer = i - 1
-                If MyThpFrames(current_frame).MyThpFrameHeader.imageSize <= MyThpFrames(i).MyThpFrameHeader.imageSize Then
-                    Array.Clear(MyThpFrames(i).MyThpVideoFrame.data, 0, MyThpFrames(i).MyThpVideoFrame.data.Length)
-                    Array.Copy(MyThpFrames(current_frame).MyThpVideoFrame.data,
-                               MyThpFrames(i).MyThpVideoFrame.data,
-                               MyThpFrames(current_frame).MyThpVideoFrame.data.Length)
-                End If
+                RepairFrame(i)
             End Try
         Next
+    End Sub
+
+    Sub RepairFrame(ByVal i As Integer)
+        Dim current_frame As Integer = i - 1
+        If MyThpFrames(current_frame).MyThpFrameHeader.imageSize <= MyThpFrames(i).MyThpFrameHeader.imageSize Then
+            Array.Clear(MyThpFrames(i).MyThpVideoFrame.data, 0, MyThpFrames(i).MyThpVideoFrame.data.Length)
+            Array.Copy(MyThpFrames(current_frame).MyThpVideoFrame.data,
+                       MyThpFrames(i).MyThpVideoFrame.data,
+                       MyThpFrames(current_frame).MyThpVideoFrame.data.Length)
+        End If
     End Sub
 End Class
