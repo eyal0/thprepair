@@ -10,6 +10,16 @@
     End Function
 
     <System.Runtime.CompilerServices.Extension()> _
+    Public Function ReadUInt64BE(ByVal b As System.IO.BinaryReader) As UInt64
+        Dim temp_bytes() As Byte = b.ReadBytes(8)
+
+        If BitConverter.IsLittleEndian Then
+            Array.Reverse(temp_bytes)
+        End If
+        Return BitConverter.ToUInt64(temp_bytes, 0)
+    End Function
+
+    <System.Runtime.CompilerServices.Extension()> _
     Public Function ReadSingleBE(ByVal b As System.IO.BinaryReader) As Single
         Dim temp_bytes() As Byte = b.ReadBytes(4)
 
